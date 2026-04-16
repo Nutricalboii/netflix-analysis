@@ -6,6 +6,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
 
 # -------------------------------
 # 🎨 Page Configuration
@@ -61,7 +63,7 @@ def load_data():
     df['duration_num'] = df['duration'].str.extract(r'(\d+)').astype(float)
     df['content_age'] = df['year_added'] - df['release_year']
     
-    # 🎯 1. Content Strategy Scoring
+    # 🎯 Content Strategy Scoring
     def calculate_score(row):
         score = 0
         if row['type'] == 'Movie': score += 1
@@ -71,24 +73,21 @@ def load_data():
     
     df['content_score'] = df.apply(calculate_score, axis=1)
     
-    df = df.dropna(subset=['type', 'country', 'release_year', 'rating'])
+    df = df.dropna(subset=['type', 'country', 'release_year', 'rating', 'description'])
     return df, reliability_index
 
 df_raw, data_reliability = load_data()
 
 # -------------------------------
-# 🤖 AI Recommender Engine (Data Science Phase)
+# 🤖 AI Engine: Recommender (Data Science Phase)
 # -------------------------------
 @st.cache_resource
 def get_recommender(data):
-    # Create metadata "soup"
     data = data.copy()
     data['metadata_soup'] = data['type'] + " " + data['listed_in'] + " " + data['rating'] + " " + data['description']
     
     tfidf = TfidfVectorizer(stop_words='english')
     tfidf_matrix = tfidf.fit_transform(data['metadata_soup'])
-    
-    # Compute Cosine Similarity
     cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
     return cosine_sim
 
@@ -96,21 +95,59 @@ cosine_sim = get_recommender(df_raw)
 indices = pd.Series(df_raw.index, index=df_raw['title']).drop_duplicates()
 
 def get_recommendations(title, cosine_sim=cosine_sim, df=df_raw):
+    if title not in indices: return pd.DataFrame(), []
     idx = indices[title]
     sim_scores = list(enumerate(cosine_sim[idx]))
     sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-    sim_scores = sim_scores[1:6] # Top 5 excluding self
+    sim_scores = sim_scores[1:6]
     movie_indices = [i[0] for i in sim_scores]
     return df.iloc[movie_indices][['title', 'type', 'listed_in', 'description']], [i[1] for i in sim_scores]
+
+# -------------------------------
+# 🧬 AI Engine: Market Segmentation (Unsupervised Phase)
+# -------------------------------
+@st.cache_data
+def get_market_segments(data):
+    # Aggregate by country
+    country_stats = data.groupby('country').agg({
+        'title': 'count',
+        'content_score': 'mean',
+        'year_added': 'mean'
+    }).reset_index()
+    
+    # TV Show Ratio
+    tv_ratio = data[data['type'] == 'TV Show'].groupby('country').size() / data.groupby('country').size()
+    country_stats['tv_ratio'] = country_stats['country'].map(tv_ratio).fillna(0)
+    
+    country_stats.columns = ['country', 'total_titles', 'avg_score', 'avg_recency', 'tv_ratio']
+    
+    # Preprocessing for Clustering
+    features = ['total_titles', 'avg_score', 'tv_ratio', 'avg_recency']
+    scaler = StandardScaler()
+    scaled_features = scaler.fit_transform(country_stats[features])
+    
+    # KMeans Clustering (k=4)
+    kmeans = KMeans(n_clusters=4, random_state=42, n_init=10)
+    country_stats['cluster'] = kmeans.fit_predict(scaled_features)
+    
+    # Archetype Mapping
+    def label_archetype(row):
+        if row['total_titles'] > 100: return "Global Powerhouse"
+        if row['tv_ratio'] > 0.5: return "Binge-Culture Hub"
+        if row['avg_score'] > 3.0: return "Strategic High-Value Hub"
+        return "Emerging Specialist"
+    
+    country_stats['archetype'] = country_stats.apply(label_archetype, axis=1)
+    return country_stats
+
+market_df = get_market_segments(df_raw)
 
 # -------------------------------
 # 🧠 Strategic Insight Engine (with Confidence)
 # -------------------------------
 def generate_insights(filtered_df, total_df):
     insights = []
-    
-    if filtered_df.empty:
-        return [("No data available", "Low")]
+    if filtered_df.empty: return [("No data available", "Low")]
     
     density = len(filtered_df) / len(total_df)
     def get_conf(val=density):
@@ -145,27 +182,11 @@ def generate_insights(filtered_df, total_df):
 st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg", width=200)
 st.sidebar.title("Intelligence Filters")
 
-content_types = st.sidebar.multiselect(
-    "Select Content Type",
-    options=df_raw['type'].unique(),
-    default=df_raw['type'].unique()
-)
-
-min_year = int(df_raw['release_year'].min())
-max_year = int(df_raw['release_year'].max())
-year_range = st.sidebar.slider(
-    "Release Year Range",
-    min_value=min_year,
-    max_value=max_year,
-    value=(2010, max_year)
-)
-
+content_types = st.sidebar.multiselect("Select Content Type", options=df_raw['type'].unique(), default=df_raw['type'].unique())
+min_year, max_year = int(df_raw['release_year'].min()), int(df_raw['release_year'].max())
+year_range = st.sidebar.slider("Release Year Range", min_value=min_year, max_value=max_year, value=(2010, max_year))
 countries = sorted(df_raw['country'].unique())
-selected_countries = st.sidebar.multiselect(
-    "Select Countries",
-    options=countries,
-    default=["United States", "India", "United Kingdom", "South Korea", "Japan"]
-)
+selected_countries = st.sidebar.multiselect("Select Countries", options=countries, default=["United States", "India", "United Kingdom", "South Korea", "Japan"])
 
 df = df_raw[
     (df_raw['type'].isin(content_types)) &
@@ -188,7 +209,6 @@ col5.metric("Data Reliability", f"{data_reliability:.2%}")
 
 st.divider()
 
-# 🧠 Strategic Insight Engine Panel
 st.subheader("💡 Strategic Insights (Prescriptive)")
 insights = generate_insights(df, df_raw)
 cols = st.columns(len(insights) if insights else 1)
@@ -199,42 +219,22 @@ for i, (text, conf) in enumerate(insights):
 st.divider()
 
 # Main UI Tabs
-tab_core, tab_advanced, tab_prescriptive, tab_ai = st.tabs(["📊 Core Intelligence", "🧠 Behavioral Analysis", "🎯 Strategic Opportunities", "🤖 AI Recommendations"])
+tab_core, tab_advanced, tab_prescriptive, tab_ai, tab_seg = st.tabs(["📊 Core Intelligence", "🧠 Behavioral Analysis", "🎯 Strategic Opportunities", "🤖 AI Recommendations", "🧬 Market Segmentation"])
 
 with tab_core:
     c1, c2 = st.columns(2)
     with c1:
         added_trend = df['year_added'].value_counts().sort_index().reset_index()
         added_trend.columns = ['Year', 'Count']
-        fig_growth = px.line(added_trend, x='Year', y='Count', title="Content Added Over Time",
-                             line_shape='spline', color_discrete_sequence=['#E50914'])
+        fig_growth = px.line(added_trend, x='Year', y='Count', title="Content Added Over Time", line_shape='spline', color_discrete_sequence=['#E50914'])
         fig_growth.update_layout(template="plotly_dark")
         st.plotly_chart(fig_growth, use_container_width=True)
     with c2:
-        top_countries = df['country'].value_counts().head(10).reset_index()
-        top_countries.columns = ['Country', 'Count']
-        fig_geo = px.bar(top_countries, x='Count', y='Country', orientation='h', 
-                         title="Top Production Hubs", color='Count', color_continuous_scale='Reds')
-        fig_geo.update_layout(template="plotly_dark", yaxis={'categoryorder':'total ascending'})
+        top_countries_df = df['country'].value_counts().head(10).reset_index()
+        top_countries_df.columns = ['Country', 'Count']
+        fig_geo = px.bar(top_countries_df, x='Count', y='Country', orientation='h', title="Top Production Hubs", color='Count', color_continuous_scale='Reds')
+        fig_geo.update_layout(template="plotly_dark")
         st.plotly_chart(fig_geo, use_container_width=True)
-
-    st.divider()
-    
-    c3, c4 = st.columns(2)
-    with c3:
-        genres = df['listed_in'].str.split(', ', expand=True).stack().value_counts().head(10).reset_index()
-        genres.columns = ['Genre', 'Count']
-        fig_genre = px.pie(genres, values='Count', names='Genre', title="Top Genre distribution",
-                           hole=0.4, color_discrete_sequence=px.colors.sequential.Reds_r)
-        fig_genre.update_layout(template="plotly_dark")
-        st.plotly_chart(fig_genre, use_container_width=True)
-    with c4:
-        st.markdown("### Audience Distribution (Rating)")
-        ratings = df['rating'].value_counts().head(10).reset_index()
-        ratings.columns = ['Rating', 'Count']
-        fig_rate = px.bar(ratings, x='Rating', y='Count', color='Count', color_continuous_scale='Reds')
-        fig_rate.update_layout(template="plotly_dark")
-        st.plotly_chart(fig_rate, use_container_width=True)
 
 with tab_advanced:
     st.subheader("🧠 Behavioral & Structural Intelligence")
@@ -242,87 +242,59 @@ with tab_advanced:
     with ac1:
         expansion = df.groupby('year_added')['country'].nunique().reset_index()
         expansion.columns = ['Year', 'Unique Countries']
-        fig_exp = px.area(expansion, x='Year', y='Unique Countries', title="Geographical Market Expansion",
-                          color_discrete_sequence=['#E50914'])
-        fig_exp.update_layout(template="plotly_dark")
-        st.plotly_chart(fig_exp, use_container_width=True)
-
+        st.plotly_chart(px.area(expansion, x='Year', y='Unique Countries', title="Geographical expansion", color_discrete_sequence=['#E50914']).update_layout(template="plotly_dark"), use_container_width=True)
     with ac2:
         mix = df.groupby(['year_added', 'type']).size().unstack().fillna(0).reset_index()
-        fig_mix = px.bar(mix, x='year_added', y=['Movie', 'TV Show'], title="Content Mix Evolution",
-                         color_discrete_map={'Movie': '#E50914', 'TV Show': '#221F1F'})
-        fig_mix.update_layout(template="plotly_dark", barmode='stack')
-        st.plotly_chart(fig_mix, use_container_width=True)
-
-    st.divider()
-
-    ac3, ac4 = st.columns(2)
-    with ac3:
-        genre_exp = df.copy()
-        genre_exp['genre_list'] = genre_exp['listed_in'].str.split(', ')
-        diversity = genre_exp.explode('genre_list').groupby('year_added')['genre_list'].nunique().reset_index()
-        fig_div = px.line(diversity, x='year_added', y='genre_list', title="Genre Diversity Index",
-                          line_shape='hv', color_discrete_sequence=['#E50914'])
-        fig_div.update_layout(template="plotly_dark")
-        st.plotly_chart(fig_div, use_container_width=True)
-
-    with ac4:
-        fig_life = px.histogram(df, x='content_age', nbins=20, title="Content Lifecycle (Age when Added)",
-                                color_discrete_sequence=['#E50914'])
-        fig_life.update_layout(template="plotly_dark")
-        st.plotly_chart(fig_life, use_container_width=True)
+        st.plotly_chart(px.bar(mix, x='year_added', y=['Movie', 'TV Show'], title="Content Mix Evolution", color_discrete_map={'Movie': '#E50914', 'TV Show': '#221F1F'}).update_layout(template="plotly_dark"), use_container_width=True)
 
 with tab_prescriptive:
     st.subheader("🎯 Strategic Opportunities & Decision Support")
     pc1, pc2 = st.columns(2)
     with pc1:
-        st.markdown("### Emerging Market Opportunities")
-        country_growth = df.groupby('country')['year_added'].mean().sort_index().sort_values(ascending=False).head(10).reset_index()
+        country_growth = df.groupby('country')['year_added'].mean().sort_values(ascending=False).head(10).reset_index()
         country_growth.columns = ['Country', 'Avg Year Added']
-        fig_emerge = px.bar(country_growth, x='Avg Year Added', y='Country', orientation='h', 
-                            title="Fastest Growing Sourcing Countries",
-                            color='Avg Year Added', color_continuous_scale='Reds', range_x=[min(max_year-5, 2015), max_year])
-        st.plotly_chart(fig_emerge, use_container_width=True)
-
+        st.plotly_chart(px.bar(country_growth, x='Avg Year Added', y='Country', orientation='h', title="Fastest Growing Sourcing Countries", color='Avg Year Added', color_continuous_scale='Reds', range_x=[min(max_year-5, 2015), max_year]).update_layout(template="plotly_dark"), use_container_width=True)
     with pc2:
-        st.markdown("### High-Value Strategic Segments")
         segment = df.groupby(['type', 'rating'])['content_score'].mean().sort_values(ascending=False).head(8).reset_index()
-        fig_seg = px.bar(segment, x='content_score', y='rating', color='type', 
-                         title="Avg Strategy Score by Segment", barmode='group',
-                         color_discrete_map={'Movie': '#E50914', 'TV Show': '#221F1F'})
-        fig_seg.update_layout(template="plotly_dark")
-        st.plotly_chart(fig_seg, use_container_width=True)
-
-    st.divider()
-
-    pc3, pc4 = st.columns(2)
-    with pc3:
-        st.markdown("### Outlier Intelligence: Extreme Durations")
-        outliers = df[df['duration_num'] > 200].sort_values(by='duration_num', ascending=False).head(10)
-        st.dataframe(outliers[['title', 'type', 'duration_num', 'country']], use_container_width=True)
-
-    with pc4:
-        st.markdown("### Strategic Content Catalog (Top Scored)")
-        st.dataframe(df.sort_values(by='content_score', ascending=False)[['title', 'type', 'release_year', 'content_score']].head(10), use_container_width=True)
+        st.plotly_chart(px.bar(segment, x='content_score', y='rating', color='type', title="Avg Strategy Score by Segment", barmode='group', color_discrete_map={'Movie': '#E50914', 'TV Show': '#221F1F'}).update_layout(template="plotly_dark"), use_container_width=True)
 
 with tab_ai:
     st.subheader("🤖 SmartContent AI Recommender")
-    st.markdown("Using NLP to discover similar content based on genre, description, and production traits.")
-    
     target_title = st.selectbox("Search for a Title to see Recommendations", options=sorted(df_raw['title'].unique()))
-    
     if target_title:
         rec_df, scores = get_recommendations(target_title)
-        
         st.markdown(f"### Top 5 Recommendations for: **{target_title}**")
-        
         cols = st.columns(5)
         for i, (idx, row) in enumerate(rec_df.iterrows()):
             with cols[i]:
                 st.markdown(f"**{row['title']}**")
-                st.caption(f"Type: {row['type']} | Match: {scores[i]:.0%}")
-                st.write(row['description'][:150] + "...")
-                st.info(f"Genres: {row['listed_in']}")
+                st.caption(f"Match: {scores[i]:.0%}")
+                st.write(row['description'][:100] + "...")
+
+with tab_seg:
+    st.subheader("🧬 Market Segmentation (Unsupervised Learning)")
+    st.markdown("Countries grouped into strategic clusters based on production volume, strategy scores, and format preferences.")
+    
+    # 3D Market Cluster Plot
+    fig_3d = px.scatter_3d(market_df, x='total_titles', y='tv_ratio', z='avg_score',
+                           color='archetype', size='total_titles', hover_name='country',
+                           title="Global Market Sourcing Archetypes (3D Cluster Analysis)",
+                           labels={'total_titles': 'Volume', 'tv_ratio': 'TV Show Ratio', 'avg_score': 'Strat Score'},
+                           color_discrete_sequence=px.colors.qualitative.Reds)
+    fig_3d.update_layout(template="plotly_dark", scene=dict(bgcolor='#141414'))
+    st.plotly_chart(fig_3d, use_container_width=True)
+    
+    st.divider()
+    
+    # Archetype Breakdown
+    st.markdown("### Strategic Archetype Definitions")
+    m_col1, m_col2 = st.columns(2)
+    with m_col1:
+        st.write("**Global Powerhouses**: Volume leaders with balanced format strategy (e.g., USA, India).")
+        st.write("**Binge-Culture Hubs**: Countries with a dominant focus on TV Series production.")
+    with m_col2:
+        st.write("**Strategic High-Value Hubs**: Producers of high-recency, high-rated strategic content.")
+        st.write("**Emerging Specialists**: Late-entry markets with developing production depth.")
 
 # -------------------------------
 # 🏁 Footer
@@ -330,6 +302,6 @@ with tab_ai:
 st.divider()
 st.markdown("""
     <div style="text-align: center; color: gray;">
-        NCIP: Netflix Content Intelligence Platform | AI-Integrated Intelligence System | Built for Strategic Data Excellence
+        NCIP: Netflix Content Intelligence Platform | Unsupervised Learning Edition | Built for Strategic Data Excellence
     </div>
     """, unsafe_allow_html=True)
