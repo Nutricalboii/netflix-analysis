@@ -1,44 +1,36 @@
-# 🎬 NCIP: Netflix Content Intelligence Platform
+# 🎬 NCIP | Netflix Content Intelligence Platform
 
-The **Netflix Content Intelligence Platform (NCIP)** is an elite data intelligence system that transforms raw streaming data into strategic business decisions. This version represents the **Prophetic Tier**, featuring full-stack Machine Learning coverage from Descriptive Analytics to Predictive Forecasting.
+The **Netflix Content Intelligence Platform (NCIP)** is a Platinum-tier SaaS intelligence system that transforms raw entertainment data into strategic business decisions. This "Platinum SaaS Edition" features a professional multipage architecture, AI-driven recommendations, and market growth forecasting.
 
-## 🚀 Strategic Vision
-NCIP shifts from simple "data plots" to **AI-Integrated Intelligence Systems**. It bridges the gap between raw entertainment data and platform strategy, enabling real-time exploration of global content trends supported by prophetic Machine Learning.
-
----
-
-## 🔮 Prophetic Intelligence Layer
-### Growth Forecasting & Strategic Roadmap
-An advanced predictive module that projects the future expansion of the Netflix catalog.
-- **Technology**: **Linear Regression** modeling of yearly content acquisition slopes.
-- **Dynamic Projections**: Forecasts title counts for 2024–2027 based on high-recency historical trends.
-- **Decision Support**: Generates a **Strategy Roadmap** (Aggressive/Steady/Plateau) based on the calculated growth slope to guide future production investment.
+## 🚀 Product Ecosystem
+NCIP shifts from basic data tracking to **Executive Intelligence Systems**. It bridges the gap between raw entertainment data and macroeconomic platform strategy through a high-performance, Glassmorphism-based interface.
 
 ---
 
-## 🧬 Unsupervised Learning Layer
-### Market Segmentation & Archetyping
-Uses **K-Means Clustering** to segment global markets into strategic archetypes (Global Powerhouses, Binge-Culture Hubs, etc.) with 3D Interactive Visualization.
+## 🏗️ Product Hubs
+
+### 🏠 Executive Command Center
+The landing experience for decision-makers, featuring high-level KPIs, Dynamic Strategic Insights, and a platform mission brief.
+
+### 📊 Intelligence Hub
+Advanced Exploratory Data Analysis (EDA) focused on content lifecycle, geographical expansion, and structural content mix evolution.
+
+### 🤖 AI Decision Suite
+A high-performance **Natural Language Processing (NLP)** engine using TF-IDF and Cosine Similarity to discover semantic content connections with Match Confidence indexing.
+
+### 🔮 Prophetic Forecasting
+A predictive growth module using **Linear Regression** to model future catalog acquisitions (2024-2027) with dynamic Strategy Roadmap generation.
+
+### 🧬 Market Archetyping
+Unsupervised **K-Means Clustering** that segments global sourcing countries into strategic archetypes (e.g., Global Powerhouses vs. Binge-Culture Hubs).
 
 ---
 
-## 🤖 Data Science & AI Layer
-### SmartContent AI Recommender
-A high-performance **NLP** engine built using **TF-IDF Vectorization** for semantic content discovery.
-
----
-
-## 🧠 Prescriptive Strategy Engine
-- **Strategic Content Scoring**: Ranking titles by platform value.
-- **Insight Confidence Tagging**: Quantified reliability of strategic insights.
-- **Data Reliability Index**: Top-level dataset integrity tracking.
-
----
-
-## 🛠️ Technology Stack
-- **AI/ML**: [Scikit-learn](https://scikit-learn.org/) (NLP, K-Means Clustering, Linear Regression)
-- **UI Layer**: [Streamlit](https://streamlit.io/) (Premium Dark Mode)
-- **Viz Engine**: [Plotly](https://plotly.com/python/) (Interactive 3D & 2D Graphics)
+## 🛠️ Technology & Design
+- **Architecture**: Multipage SaaS Sidebar Controller
+- **Design System**: Glassmorphism (CSS) + Google Fonts (Inter/Outfit)
+- **AI Stack**: Scikit-Learn (Supervised & Unsupervised ML)
+- **Visualization**: Plotly Interactive High-Impact Graphics
 
 ---
 
@@ -55,4 +47,4 @@ streamlit run app.py
 ```
 
 ---
-*Built for Strategic Data Excellence. This project represents the Prophetic Limit of Content Intelligence Systems.*
+*Built for Strategic Data Excellence. This project represents the pinnacle of Business Intelligence & Data Science.*
