@@ -4,6 +4,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 import seaborn as sns
 import matplotlib.pyplot as plt
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 # -------------------------------
 # 🎨 Page Configuration
@@ -75,6 +77,33 @@ def load_data():
 df_raw, data_reliability = load_data()
 
 # -------------------------------
+# 🤖 AI Recommender Engine (Data Science Phase)
+# -------------------------------
+@st.cache_resource
+def get_recommender(data):
+    # Create metadata "soup"
+    data = data.copy()
+    data['metadata_soup'] = data['type'] + " " + data['listed_in'] + " " + data['rating'] + " " + data['description']
+    
+    tfidf = TfidfVectorizer(stop_words='english')
+    tfidf_matrix = tfidf.fit_transform(data['metadata_soup'])
+    
+    # Compute Cosine Similarity
+    cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
+    return cosine_sim
+
+cosine_sim = get_recommender(df_raw)
+indices = pd.Series(df_raw.index, index=df_raw['title']).drop_duplicates()
+
+def get_recommendations(title, cosine_sim=cosine_sim, df=df_raw):
+    idx = indices[title]
+    sim_scores = list(enumerate(cosine_sim[idx]))
+    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+    sim_scores = sim_scores[1:6] # Top 5 excluding self
+    movie_indices = [i[0] for i in sim_scores]
+    return df.iloc[movie_indices][['title', 'type', 'listed_in', 'description']], [i[1] for i in sim_scores]
+
+# -------------------------------
 # 🧠 Strategic Insight Engine (with Confidence)
 # -------------------------------
 def generate_insights(filtered_df, total_df):
@@ -83,32 +112,27 @@ def generate_insights(filtered_df, total_df):
     if filtered_df.empty:
         return [("No data available", "Low")]
     
-    # Confidence Proxy (Data Density)
     density = len(filtered_df) / len(total_df)
     def get_conf(val=density):
         if val > 0.1: return "High"
         if val > 0.02: return "Medium"
         return "Low"
 
-    # Type Dominance
     counts = filtered_df['type'].value_counts()
     if counts.get('Movie', 0) > counts.get('TV Show', 0):
         insights.append(("Movies dominate the platform share.", get_conf()))
     else:
         insights.append(("TV Shows lead this segment (Binge-culture focus).", get_conf()))
         
-    # Growth Spikes
     if not filtered_df['year_added'].empty:
         max_year = filtered_df['year_added'].value_counts().idxmax()
         if max_year > 2015:
             insights.append(("Strategic pivot to 'Originals' detected post-2015.", get_conf()))
 
-    # Audience Focus
     top_rating = filtered_df['rating'].value_counts().idxmax()
     if top_rating in ['TV-MA', 'R']:
         insights.append((f"Adult audience ({top_rating}) is the primary target.", get_conf()))
 
-    # Strategic Table Insight
     avg_score = filtered_df['content_score'].mean()
     if avg_score > 3.0:
         insights.append(("Strategic Content Score is peaking in this segment.", "High"))
@@ -121,14 +145,12 @@ def generate_insights(filtered_df, total_df):
 st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg", width=200)
 st.sidebar.title("Intelligence Filters")
 
-# Filter: Content Type
 content_types = st.sidebar.multiselect(
     "Select Content Type",
     options=df_raw['type'].unique(),
     default=df_raw['type'].unique()
 )
 
-# Filter: Year Range
 min_year = int(df_raw['release_year'].min())
 max_year = int(df_raw['release_year'].max())
 year_range = st.sidebar.slider(
@@ -138,7 +160,6 @@ year_range = st.sidebar.slider(
     value=(2010, max_year)
 )
 
-# Filter: Country
 countries = sorted(df_raw['country'].unique())
 selected_countries = st.sidebar.multiselect(
     "Select Countries",
@@ -146,7 +167,6 @@ selected_countries = st.sidebar.multiselect(
     default=["United States", "India", "United Kingdom", "South Korea", "Japan"]
 )
 
-# Apply Filters
 df = df_raw[
     (df_raw['type'].isin(content_types)) &
     (df_raw['release_year'].between(year_range[0], year_range[1])) &
@@ -159,7 +179,6 @@ df = df_raw[
 st.title("🎬 Netflix Content Intelligence Platform (NCIP)")
 st.markdown("Transforming raw streaming data into actionable strategic insights.")
 
-# Key Performance Indicators (KPIs)
 col1, col2, col3, col4, col5 = st.columns(5)
 col1.metric("Total Titles", len(df))
 col2.metric("Movies", len(df[df['type'] == 'Movie']))
@@ -180,10 +199,9 @@ for i, (text, conf) in enumerate(insights):
 st.divider()
 
 # Main UI Tabs
-tab_core, tab_advanced, tab_prescriptive = st.tabs(["📊 Core Intelligence", "🧠 Behavioral Analysis", "🎯 Strategic Opportunities"])
+tab_core, tab_advanced, tab_prescriptive, tab_ai = st.tabs(["📊 Core Intelligence", "🧠 Behavioral Analysis", "🎯 Strategic Opportunities", "🤖 AI Recommendations"])
 
 with tab_core:
-    # 🚀 Growth Intelligence Engine
     c1, c2 = st.columns(2)
     with c1:
         added_trend = df['year_added'].value_counts().sort_index().reset_index()
@@ -202,7 +220,6 @@ with tab_core:
 
     st.divider()
     
-    # Genre Distribution
     c3, c4 = st.columns(2)
     with c3:
         genres = df['listed_in'].str.split(', ', expand=True).stack().value_counts().head(10).reset_index()
@@ -223,7 +240,6 @@ with tab_advanced:
     st.subheader("🧠 Behavioral & Structural Intelligence")
     ac1, ac2 = st.columns(2)
     with ac1:
-        # Geographical Expansion
         expansion = df.groupby('year_added')['country'].nunique().reset_index()
         expansion.columns = ['Year', 'Unique Countries']
         fig_exp = px.area(expansion, x='Year', y='Unique Countries', title="Geographical Market Expansion",
@@ -232,7 +248,6 @@ with tab_advanced:
         st.plotly_chart(fig_exp, use_container_width=True)
 
     with ac2:
-        # Content Mix Evolution
         mix = df.groupby(['year_added', 'type']).size().unstack().fillna(0).reset_index()
         fig_mix = px.bar(mix, x='year_added', y=['Movie', 'TV Show'], title="Content Mix Evolution",
                          color_discrete_map={'Movie': '#E50914', 'TV Show': '#221F1F'})
@@ -243,7 +258,6 @@ with tab_advanced:
 
     ac3, ac4 = st.columns(2)
     with ac3:
-        # Genre Diversity Index
         genre_exp = df.copy()
         genre_exp['genre_list'] = genre_exp['listed_in'].str.split(', ')
         diversity = genre_exp.explode('genre_list').groupby('year_added')['genre_list'].nunique().reset_index()
@@ -253,7 +267,6 @@ with tab_advanced:
         st.plotly_chart(fig_div, use_container_width=True)
 
     with ac4:
-        # Content Lifecycle analysis
         fig_life = px.histogram(df, x='content_age', nbins=20, title="Content Lifecycle (Age when Added)",
                                 color_discrete_sequence=['#E50914'])
         fig_life.update_layout(template="plotly_dark")
@@ -261,43 +274,55 @@ with tab_advanced:
 
 with tab_prescriptive:
     st.subheader("🎯 Strategic Opportunities & Decision Support")
-    
-    # 🌍 3. Market Opportunity Detection
     pc1, pc2 = st.columns(2)
     with pc1:
         st.markdown("### Emerging Market Opportunities")
-        country_growth = df.groupby('country')['year_added'].mean().sort_values(ascending=False).head(10).reset_index()
+        country_growth = df.groupby('country')['year_added'].mean().sort_index().sort_values(ascending=False).head(10).reset_index()
         country_growth.columns = ['Country', 'Avg Year Added']
         fig_emerge = px.bar(country_growth, x='Avg Year Added', y='Country', orientation='h', 
-                            title="Fastest Growing Sourcing Countries (Late-Entry Growth)",
-                            color='Avg Year Added', color_continuous_scale='Reds', range_x=[2015, 2024])
-    st.plotly_chart(fig_emerge, use_container_width=True)
-    st.info("💡 Identifies regions where Netflix has recently accelerated content acquisition.")
+                            title="Fastest Growing Sourcing Countries",
+                            color='Avg Year Added', color_continuous_scale='Reds', range_x=[min(max_year-5, 2015), max_year])
+        st.plotly_chart(fig_emerge, use_container_width=True)
 
     with pc2:
-        # 🎯 2. Top Performing Segments
         st.markdown("### High-Value Strategic Segments")
         segment = df.groupby(['type', 'rating'])['content_score'].mean().sort_values(ascending=False).head(8).reset_index()
         fig_seg = px.bar(segment, x='content_score', y='rating', color='type', 
-                         title="Avg Strategy Score by Segment (Type + Rating)", barmode='group',
+                         title="Avg Strategy Score by Segment", barmode='group',
                          color_discrete_map={'Movie': '#E50914', 'TV Show': '#221F1F'})
         fig_seg.update_layout(template="plotly_dark")
         st.plotly_chart(fig_seg, use_container_width=True)
-        st.info("💡 Ranks content categories by strategic importance (Rating + Recency + Format).")
 
     st.divider()
 
-    # 🕵️ 5. Outlier Intelligence
     pc3, pc4 = st.columns(2)
     with pc3:
         st.markdown("### Outlier Intelligence: Extreme Durations")
         outliers = df[df['duration_num'] > 200].sort_values(by='duration_num', ascending=False).head(10)
         st.dataframe(outliers[['title', 'type', 'duration_num', 'country']], use_container_width=True)
-        st.warning(f"Detected {len(df[df['duration_num'] > 200])} titles with extreme durations (>200 units).")
 
     with pc4:
-        st.markdown("### Strategic Content Catalog (Top Rated)")
+        st.markdown("### Strategic Content Catalog (Top Scored)")
         st.dataframe(df.sort_values(by='content_score', ascending=False)[['title', 'type', 'release_year', 'content_score']].head(10), use_container_width=True)
+
+with tab_ai:
+    st.subheader("🤖 SmartContent AI Recommender")
+    st.markdown("Using NLP to discover similar content based on genre, description, and production traits.")
+    
+    target_title = st.selectbox("Search for a Title to see Recommendations", options=sorted(df_raw['title'].unique()))
+    
+    if target_title:
+        rec_df, scores = get_recommendations(target_title)
+        
+        st.markdown(f"### Top 5 Recommendations for: **{target_title}**")
+        
+        cols = st.columns(5)
+        for i, (idx, row) in enumerate(rec_df.iterrows()):
+            with cols[i]:
+                st.markdown(f"**{row['title']}**")
+                st.caption(f"Type: {row['type']} | Match: {scores[i]:.0%}")
+                st.write(row['description'][:150] + "...")
+                st.info(f"Genres: {row['listed_in']}")
 
 # -------------------------------
 # 🏁 Footer
@@ -305,6 +330,6 @@ with tab_prescriptive:
 st.divider()
 st.markdown("""
     <div style="text-align: center; color: gray;">
-        NCIP: Netflix Content Intelligence Platform | Prescriptive Decision Edition | Built for Strategic Data Excellence
+        NCIP: Netflix Content Intelligence Platform | AI-Integrated Intelligence System | Built for Strategic Data Excellence
     </div>
     """, unsafe_allow_html=True)
