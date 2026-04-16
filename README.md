@@ -1,44 +1,39 @@
-# 🎬 Netflix Content Intelligence Analysis
+# 🎬 Netflix Data Analysis
 
-## 📌 Project Overview
-This project performs an advanced **Content Intelligence Analysis** on the Netflix movies and TV shows dataset. By shifting beyond simple tracking, we utilize data engineering principles to extract behavioral trends and geographical insights from over 8,000 titles.
+A simple data analysis project exploring Netflix's catalog of movies and TV shows. This project visualizes trends in content types, production countries, genres, and growth over time.
 
-## 🎯 Objectives
-- **Content Distribution**: Analyze the ratio of Movies to TV Shows to understand platform strategy.
-- **Geographical Intelligence**: Identify lead content-producing nations to map global influence.
-- **Historical Scaling**: Track the evolution of production volume over two decades.
-- **Genre Architecture**: Map the most prevalent genres to identify audience preference clusters.
+## 📊 Visualizations
 
-## 🛠️ Tools & Engineering
-- **Python**: Core engine.
-- **Pandas**: Advanced data preprocessing and modular category extraction.
-- **Matplotlib/Seaborn**: High-resolution visualization with a custom **Netflix-Identity** color palette.
-- **Modular Design**: Implemented helper functions for reusable data extraction logic.
+### 1. Content Type Distribution
+Analysis of the ratio of Movies to TV Shows on the platform.
+![Content Distribution](plots/distribution_pie.png)
+
+### 2. Top Production Countries
+Identifying the leading nations in Netflix content production.
+![Top Countries](plots/top_countries.png)
+
+### 3. Top Genres
+Mapping the most prevalent genres in the catalog.
+![Top Genres](plots/top_genres.png)
+
+### 4. Content Growth Trend
+Tracking the evolution of content production volume over the years.
+![Yearly Trend](plots/yearly_trend.png)
+
+## 🛠️ Tools Used
+- **Python**: Core programming language.
+- **Pandas**: For data manipulation and analysis.
+- **Matplotlib & Seaborn**: For creating the visualizations.
 
 ## 📁 Project Structure
 ```text
 netflix-analysis/
-├── venv/                 # Secure virtual environment
-├── netflix.csv           # Raw intelligence source
-├── analysis.py           # Content Intelligence script (Engineered)
-├── README.md             # Documentation & Insights
-└── plots/                # High-resolution PNG exports
+├── netflix.csv           # Original dataset
+├── analysis.py           # Python script for analysis
+├── analysis.ipynb        # Jupyter Notebook version
+└── plots/                # Exported visualizations
 ```
 
-## 📊 Key Analytical Insights
-- **Platform Strategy**: Movies constitute ~70% of the library, but TV Shows show higher growth in recent years.
-- **Market Dominance**: The United States and India remain the primary production hubs, though international expansion is accelerating.
-- **The 'Originals' Boom**: A massive spike in content post-2015 marks the pivot toward Netflix's first-party production strategy.
-- **Genre Focus**: International dramas and comedies are the structural backbone of the Netflix catalog.
-
-## ⚠️ Project Limitations
-- **Data Completeness**: Certain older titles or niche regions may have missing metadata (e.g., specific cast info).
-- **Snapshot Nature**: This analysis is based on a snapshot of the Netflix library and does not include real-time daily updates.
-
-## 👨‍🏫 Viva Strategy
-- **Keywords**: "Content Intelligence," "Modular Engineering," "Visual Theming."
-- **Focus**: Emphasize how you used a custom helper function (`get_top_n`) to make your code more professional and scalable.
-- **Integrity**: Discuss the data cleaning process to show you understand how to handle real-world "dirty" data.
-
----
-*An engineered academic submission for data intelligence studies.*
+## 🚀 How to Run
+1. Install dependencies: `pip install pandas matplotlib seaborn`
+2. Run the script: `python analysis.py`
