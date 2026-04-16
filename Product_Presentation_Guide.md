@@ -1,64 +1,58 @@
-# 🎬 NCIP: Final Demo Protocol (Speaker Script)
+# 💎 NCIP: Diamond Presentation Protocol
 
-Use this guide to walk through your **Netflix Content Intelligence Platform** during a viva, presentation, or product demo. This sequence is designed to showcase the system's progression from "Basic Data" to "Prophetic Intelligence."
-
----
-
-## 🏗️ Step 1: The Overview (Data Integrity)
-*“Start by showing the scale and reliability of the platform.”*
-
-1.  **Metric Highlight**: Point out the **Total Titles** and the **Data Reliability Index (92%+)**.
-2.  **Strategic Talk**: *“We aren't just looking at a CSV. NCIP first audits the data to ensure every insight is high-fidelity and mathematically validated.”*
+This guide outlines your "Diamond Class" presentation script. Use this to demonstrate how the **Netflix Content Intelligence Platform** handles the full complexity of content strategy from data sanitization to prophetic forecasting.
 
 ---
 
-## 📈 Step 2: Platform Growth (Core Intelligence)
-*“Show how Netflix scales.”*
+## 🏗️ Step 1: Platform Command Center (The Pulse)
+*“Start with the Executive Overview.”*
 
-1.  **Action**: Navigate to the **📊 Core Intelligence** tab.
-2.  **Point**: Show the **Content Added over Time** line chart.
-3.  **Strategic Talk**: *“Notice the pivot post-2015. This isn't just growth; it's the 'Originals Era' where Netflix shifted from aggregator to producer.”*
-
----
-
-## 🧠 Step 3: Prescriptive Analytics (Strategic Scoring)
-*“Show that the system 'thinks' strategically.”*
-
-1.  **Action**: Scroll to the **💡 Strategic Insights** at the top.
-2.  **Point**: Highlight the **Confidence Tags** (High/Medium).
-3.  **Action**: Change a filter (e.g., select only "South Korea") and show how the insights and confidence levels update.
-4.  **Strategic Talk**: *“The platform uses prescriptive scoring to rank content value. It evaluates title format, recency, and audience targeting to recommend where investment should flow.”*
+1.  **Point**: Show the **Platform Pulse** indicator in the sidebar. 
+2.  **Point**: Highlight the **Strategic Score Delta** (+/- global avg).
+3.  **Talk**: *“NCIP is not just a dashboard; it’s a living command center. We track catalog health in real-time, scoring every title against a proprietary strategic value index.”*
 
 ---
 
-## 🤖 Step 4: Machine Learning (The Recommender)
-*“The AI Wow Factor.”*
+## 📈 Step 2: The Intelligence Hub (Structure)
+*“Moving to core analytics.”*
 
-1.  **Action**: Navigate to the **🤖 AI Recommendations** tab.
-2.  **Search**: Select a popular title (e.g., *Stranger Things* or *3%*).
-3.  **Strategic Talk**: *“We've integrated a Natural Language Processing (NLP) engine. Using TF-IDF and Cosine Similarity, the system understands the semantic context of descriptions to recommend matches with a calculated 'Match Confidence %'.”*
-
----
-
-## 🧬 Step 5: Unsupervised Learning (Market Segments)
-*“The Macroeconomic Lens.”*
-
-1.  **Action**: Navigate to the **🧬 Market Segmentation** tab.
-2.  **Point**: Spin the **3D Cluster Plot**.
-3.  **Strategic Talk**: *“Here, we use K-Means Clustering to group the world into archetypes. We can instantly distinguish 'Global Powerhouses' from 'Binge-Culture Hubs,' identifying market specialists at a glance.”*
+1.  **Action**: Click **📊 Intelligence Hub**.
+2.  **Point**: Show the **Library Sourcing** trend.
+3.  **Talk**: *“We analyze behavioral shifts—tracking how Netflix aggressively adapted its sourcing strategy to dominate global markets post-2015.”*
 
 ---
 
-## 🔮 Step 6: The Prophetic Tier (Forecasting)
-*“Ending on the future.”*
+## 🤖 Step 3: AI Sourcing Hub (Supervised NLP)
+*“Demonstrating the AI engine.”*
 
-1.  **Action**: Navigate to the **🎯 Strategic Opportunities** tab and scroll to **Predictive Growth Forecast**.
-2.  **Action**: Show the **AI-Projected Trendline** vs historical data.
-3.  **Strategic Talk**: *“Finally, the platform looks forward. Our predictive engine forecasts growth through 2027, generating a dynamic Strategy Roadmap to guide long-term platform planning.”*
+1.  **Action**: Click **🤖 AI Decision Suite**.
+2.  **Search**: Find a title like *Stranger Things*.
+3.  **Talk**: *“Our NLP engine uses TF-IDF vectorization to map semantic content DNA. It identifies high-confidence matches to discover hidden content correlations across the entire global catalog.”*
 
 ---
-### 🛠️ Final Launch Commands
-- **Install**: `pip install -r requirements.txt`
-- **Run**: `streamlit run app.py`
 
-*Built for Strategic Data Excellence. Ready for Diamond Status review.*
+## 🧬 Step 4: Market Archetypes (Unsupervised Clustering)
+*“The World Map.”*
+
+1.  **Action**: Click **🧬 Market Archetypes**.
+2.  **Talk**: *“We use Unsupervised Machine Learning (K-Means Clustering) to group 190+ countries into 4 strategic archetypes. This allows us to instantly identify production hubs like 'Binge-Culture Centers' or 'Strategic Value Hubs' in 3D space.”*
+
+---
+
+## 🔮 Step 5: The Prophetic Prophecy (Linear Forecast)
+*“Closing on the vision.”*
+
+1.  **Action**: Click **🔮 Prophetic Forecast**.
+2.  **Talk**: *“Finally, we look into the future. Our growth engine projects expansion until 2027. Combined with our Strategy Roadmap, it provides a mathematical vision for where Netflix should invest next.”*
+
+---
+
+## 🕵️ Step 6: The Diamond Audit (Hardening)
+*“The Engineering Seal of Quality.”*
+
+1.  **Action**: Click **🕵️ System Audit**.
+2.  **Talk**: *“The platform is mathematically hardened. Every insight has been validated by a background audit suite checking for stability, performance, and integrity.”*
+
+---
+### 🎬 Ready for Diamond-Level Review.
+Built for the absolute limit of Strategic Data Science.
